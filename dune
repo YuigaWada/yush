@@ -1,0 +1,10 @@
+(ocamlyacc parser)
+(ocamllex lexer)
+(executable
+   (name yush)
+   (libraries unix angstrom))
+
+
+(env
+  (dev
+    (flags (:standard -w -33 -w -27 -w -26))))
