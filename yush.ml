@@ -17,12 +17,12 @@ let resolve_fullpath path binpath =
     with _ -> false
   in
 
-  let res =
+  let valid =
     List.filter_map
       (fun p -> if accessible (p ^ binpath) then Some (p ^ binpath) else None)
       path
   in
-  match res with x :: xs -> Some x | _ -> None
+  match valid with x :: xs -> Some x | _ -> None
 
 (* Execute *)
 
@@ -58,10 +58,10 @@ let rec execute_all path pipes cmds pids =
       match cmds with
       | [] -> ()
       | x :: xs ->
-          let res = execute path x input output in
+          let pid = execute path x input output in
           if used_pipe_in then Unix.close input;
           if used_pipe_out then Unix.close output;
-          execute_all path _pipes xs (pids @ [ res ])
+          execute_all path _pipes xs (pids @ [ pid ])
 
 (* Main *)
 
