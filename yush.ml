@@ -5,6 +5,7 @@ exception No_executables
 let red_meta = "\x1B[33m"
 let nocolor_meta = "\x1B[0m"
 let path = [ "/bin/"; "/usr/bin/" ]
+let std = (Unix.stdin, Unix.stdout)
 
 (* Path *)
 
@@ -35,7 +36,6 @@ let execute path exe input output =
           | 0 ->
               (* Child process *)
               let args = Array.of_list (fullpath :: args) in
-
               Unix.dup2 input Unix.stdin;
               Unix.dup2 output Unix.stdout;
               Unix.execv fullpath args
@@ -47,14 +47,21 @@ let execute path exe input output =
       let _ = Unix.chdir dir in
       None
 
-let rec execute_all path pipe cmds pids =
-  let pipeRead, pipeWrite = pipe in
-  let input = match List.length pids with 0 -> Unix.stdin | _ -> pipeRead in
-  let output = match List.length cmds with 1 -> Unix.stdout | _ -> pipeWrite in
-
-  match cmds with
+let rec execute_all path pipes cmds pids =
+  match pipes with
   | [] -> ()
-  | x :: xs -> execute_all path pipe xs (pids @ [ execute path x input output ])
+  | pipe :: _pipes -> 
+      let used_pipe_in, used_pipe_out = (List.length pids > 0, List.length _pipes > 0) in
+      let input, _ = if used_pipe_in then pipe else std in
+      let _, output = if used_pipe_out then List.hd _pipes else std in
+
+      match cmds with
+      | [] -> ()
+      | x :: xs ->
+          let res = execute path x input output in
+          if used_pipe_in then Unix.close input;
+          if used_pipe_out then Unix.close output;
+          execute_all path _pipes xs (pids @ [ res ])
 
 (* Main *)
 
@@ -63,8 +70,8 @@ let main stream =
     try
       let lexbuf = Lexing.from_string text in
       let coms = Parser.exes Lexer.lexer lexbuf in
-      let pipe = Unix.pipe () in
-      execute_all path pipe coms []
+      let pipes = List.init (List.length coms) (fun x -> Unix.pipe ()) in
+      execute_all path pipes coms []
     with
     | Lexer.No_such_symbol -> Printf.printf "yush: invalid characters in the command.\n"
     | _ -> Printf.printf "yush: command not found.\n"
