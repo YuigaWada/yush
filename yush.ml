@@ -6,10 +6,15 @@ exception Invalid_file_descriptor
 let permission = 0o640
 let red_meta = "\x1B[33m"
 let nocolor_meta = "\x1B[0m"
-let path = [ "/bin/"; "/usr/bin/" ]
 let std = (Unix.stdin, Unix.stdout)
 
 (* Path *)
+
+let concat_path bf af =
+  let tail str = String.sub str (String.length str - 2) 1 in
+  if String.length bf == 0 then af
+  else if tail bf == "/" then bf ^ af
+  else bf ^ "/" ^ af
 
 let resolve_fullpath path binpath =
   let accessible x =
@@ -21,11 +26,13 @@ let resolve_fullpath path binpath =
 
   let valid =
     List.filter_map
-      (fun p -> if accessible (p ^ binpath) then Some (p ^ binpath) else None)
+      (fun p ->
+        if accessible (concat_path p binpath) then Some (concat_path p binpath)
+        else None)
       path
   in
   match valid with x :: xs -> Some x | _ -> None
-
+  
 (* Redirect *)
 
 let redirect red =
@@ -89,6 +96,7 @@ let rec execute_all path pipes cmds pids =
 let main stream =
   let process text =
     try
+      let path = Str.split (Str.regexp ":") @@ Sys.getenv "PATH" in 
       let lexbuf = Lexing.from_string text in
       let coms = Parser.exes Lexer.lexer lexbuf in
       let pipes = List.init (List.length coms) (fun x -> Unix.pipe ()) in

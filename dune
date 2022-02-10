@@ -2,7 +2,7 @@
 (ocamllex lexer)
 (executable
    (name yush)
-   (libraries unix angstrom))
+   (libraries unix angstrom str))
 
 
 (env
