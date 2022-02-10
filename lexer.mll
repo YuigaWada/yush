@@ -13,6 +13,8 @@ rule lexer = parse
 | '\''[^'\'']*'\'' as str { SSTR str }
 | digit+ as num  { NUM (int_of_string num) }
 | '|' { PIPE }
+| '>' { RRED }
+| '<' { LRED }
 | eof                     { EOF }
 | [' ' '\t' ]             { lexer lexbuf }
 | _                       { raise No_such_symbol }

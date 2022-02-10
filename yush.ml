@@ -1,7 +1,9 @@
 open Ast
 
 exception No_executables
+exception Invalid_file_descriptor
 
+let permission = 0o640
 let red_meta = "\x1B[33m"
 let nocolor_meta = "\x1B[0m"
 let path = [ "/bin/"; "/usr/bin/" ]
@@ -24,21 +26,40 @@ let resolve_fullpath path binpath =
   in
   match valid with x :: xs -> Some x | _ -> None
 
+(* Redirect *)
+
+let redirect red =
+  let fds = [ Unix.stdin; Unix.stdout; Unix.stderr ] in
+  let process fd path open_flags =
+    let source = Unix.openfile path open_flags permission in
+    if fd < 3 then Unix.dup2 source (List.nth fds fd)
+    else raise Invalid_file_descriptor;
+    source
+  in
+
+  match red with
+  | InputRedirect (fd, path) -> process fd path [ O_RDONLY ]
+  | OutputRedirect (fd, path) -> process fd path [ O_WRONLY; O_CREAT ]
+  | OutputAppend path -> process 1 path [ O_WRONLY; O_APPEND ]
+
 (* Execute *)
 
 let execute path exe input output =
   match exe with
-  | Command (binpath, args) -> (
+  | Command (binpath, args, redirects) -> (
       match resolve_fullpath path binpath with
       | None -> raise No_executables
       | Some fullpath -> (
           match Unix.fork () with
           | 0 ->
               (* Child process *)
-              let args = Array.of_list (fullpath :: args) in
               Unix.dup2 input Unix.stdin;
               Unix.dup2 output Unix.stdout;
-              Unix.execv fullpath args
+              let fds = List.map redirect redirects in
+              let args = Array.of_list (fullpath :: args) in
+              let pid = Unix.execv fullpath args in
+              List.iter Unix.close fds;
+              Some pid
           | child_pid ->
               (* Parent process *)
               let _ = Unix.waitpid [] child_pid in
