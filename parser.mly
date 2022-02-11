@@ -36,7 +36,7 @@ args : {[]}
 redirects : {[]}
           | LRED STR redirects {[InputRedirect(0,$2)]@$3}
           | RRED STR redirects {[OutputRedirect(1,$2)]@$3}
-          | RRED NUM STR redirects {[OutputRedirect($2-1,$3)]@$4}
+          | RRED NUM STR redirects {[OutputRedirect($2,$3)]@$4}
           | RRED RRED STR redirects {[OutputAppend($3)]@$4}
           ;
 
