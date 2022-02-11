@@ -103,6 +103,7 @@ let main stream =
       execute_all path pipes coms []
     with
     | Lexer.No_such_symbol -> Printf.printf "yush: invalid characters in the command.\n"
+    | Invalid_file_descriptor -> Printf.printf "yush: invalid file descriptor.\n"
     | _ -> Printf.printf "yush: command not found.\n"
   in
   Stream.iter process stream
