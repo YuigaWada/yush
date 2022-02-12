@@ -6,7 +6,7 @@ open Ast
 %}
 
 /* File parser.mly */
-%token <int> NUM FDREDOUT
+%token <int> NUM FDREDOUT FDPOINTER
 %token <string> STR QSTR
 %token PIPE EOF SPACE CD REDIN REDOUT
 %type <Ast.exes> exes
@@ -32,10 +32,17 @@ args : {[]}
      ;
 
 redirects : {[]}
-          | REDIN STR redirects {[InputRedirect(0,$2)]@$3}
-          | REDOUT STR redirects {[OutputRedirect(1,$2)]@$3}
-          | FDREDOUT STR redirects {[OutputRedirect($1,$2)]@$3}
-          | REDOUT REDOUT STR redirects {[OutputAppend($3)]@$4}
+          | REDIN STR redirects {[InputRedirect(0,Path($2))]@$3}
+          | REDIN FDPOINTER redirects {[InputRedirect(0,FileDescriptor($2))]@$3}
+
+          | REDOUT STR redirects {[OutputRedirect(1,Path($2))]@$3}
+          | REDOUT FDPOINTER redirects {[OutputRedirect(1,FileDescriptor($2))]@$3}
+
+          | FDREDOUT STR redirects {[OutputRedirect($1,Path($2))]@$3}
+          | FDREDOUT FDPOINTER redirects {[OutputRedirect($1,FileDescriptor($2))]@$3}
+
+          | REDOUT REDOUT STR redirects {[OutputAppend(Path($3))]@$4}
+          | REDOUT REDOUT FDPOINTER redirects {[OutputAppend(FileDescriptor($3))]@$4}
           ;
 
 %%

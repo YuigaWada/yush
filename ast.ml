@@ -1,9 +1,9 @@
-type path = string
-
 type file_descriptor = int
-type redirect = InputRedirect of file_descriptor * string 
-              | OutputRedirect of file_descriptor * string (* fd_old -> fd_new *)
-              | OutputAppend of string
+type file = Path of string  
+          | FileDescriptor of file_descriptor 
+type redirect = InputRedirect of file_descriptor * file 
+              | OutputRedirect of file_descriptor * file (* fd_old -> fd_new *)
+              | OutputAppend of file
 type redirects = redirect list
 
 type arg = string

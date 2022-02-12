@@ -16,6 +16,7 @@ rule lexer = parse
 | '\"'[^'\"']*'\"' as str { QSTR (crop_str str) }
 | '\''[^'\'']*'\'' as str { QSTR (crop_str str) }
 | digit+'>' as str { FDREDOUT (int_of_string @@ pop_tail str) }
+| '&'digit+ as fd  { FDPOINTER (int_of_string @@ pop_head fd) }
 | digit+ as num  { NUM (int_of_string num) }
 | '|' { PIPE }
 | '>' { REDOUT }

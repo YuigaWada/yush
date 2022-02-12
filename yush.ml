@@ -35,19 +35,26 @@ let resolve_fullpath path binpath =
   
 (* Redirect *)
 
-let redirect red =
+let get_file_descr fd =
   let fds = [ Unix.stdin; Unix.stdout; Unix.stderr ] in
-  let process fd path open_flags =
-    let source = Unix.openfile path open_flags permission in
-    if fd < 3 then Unix.dup2 source (List.nth fds fd)
-    else raise Invalid_file_descriptor;
+  if fd < 3 then List.nth fds fd else raise Invalid_file_descriptor
+
+let redirect red =
+  let process fd_dist file open_flags =
+    let source =
+      match file with
+      | Path path -> Unix.openfile path open_flags permission
+      | FileDescriptor fd_src -> get_file_descr fd_src
+    in
+
+    Unix.dup2 source (get_file_descr fd_dist);
     source
   in
 
   match red with
-  | InputRedirect (fd, path) -> process fd path [ O_RDONLY ]
-  | OutputRedirect (fd, path) -> process fd path [ O_WRONLY; O_CREAT ]
-  | OutputAppend path -> process 1 path [ O_WRONLY; O_APPEND ]
+  | InputRedirect (fd, file) -> process fd file [ O_RDONLY ]
+  | OutputRedirect (fd, file) -> process fd file [ O_WRONLY; O_CREAT ]
+  | OutputAppend file -> process 1 file [ O_WRONLY; O_APPEND ]
 
 (* Execute *)
 
