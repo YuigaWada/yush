@@ -9,13 +9,13 @@ let str = ['a'-'z' 'A'-'Z' '_' '.' '/' '-' '~'] ['a'-'z' 'A'-'Z' '0'-'9' '.' '/'
 rule lexer = parse
 | "cd" { CD }
 | str as text              { STR text }
-| '\"'[^'\"']*'\"' as str { DSTR str }
-| '\''[^'\'']*'\'' as str { SSTR str }
-| digit+'>' as str { NRRED str }
+| '\"'[^'\"']*'\"' as str { QSTR str }
+| '\''[^'\'']*'\'' as str { QSTR str }
+| digit+'>' as str { FDREDOUT str }
 | digit+ as num  { NUM (int_of_string num) }
 | '|' { PIPE }
-| '>' { RRED }
-| '<' { LRED }
+| '>' { REDOUT }
+| '<' { REDIN }
 | eof                     { EOF }
 | [' ' '\t' ]             { lexer lexbuf }
 | _                       { raise No_such_symbol }
