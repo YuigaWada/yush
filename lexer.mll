@@ -11,6 +11,7 @@ rule lexer = parse
 | str as text              { STR text }
 | '\"'[^'\"']*'\"' as str { DSTR str }
 | '\''[^'\'']*'\'' as str { SSTR str }
+| digit+'>' as str { NRRED str }
 | digit+ as num  { NUM (int_of_string num) }
 | '|' { PIPE }
 | '>' { RRED }

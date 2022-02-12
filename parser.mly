@@ -3,12 +3,14 @@
 open Printf
 open Ast
 
-let crop_str s = String.sub s 1 @@ (String.length s) - 2
+let pop_head s = String.sub s 1 @@ (String.length s) - 1
+let pop_tail s = String.sub s 0 @@ (String.length s) - 1
+let crop_str s = pop_head @@ pop_tail s
 %}
 
 /* File parser.mly */
 %token <int> NUM
-%token <string> STR SSTR DSTR
+%token <string> STR SSTR DSTR NRRED
 %token PIPE EOF SPACE CD LRED RRED
 %type <Ast.exes> exes
 
@@ -36,7 +38,7 @@ args : {[]}
 redirects : {[]}
           | LRED STR redirects {[InputRedirect(0,$2)]@$3}
           | RRED STR redirects {[OutputRedirect(1,$2)]@$3}
-          | RRED NUM STR redirects {[OutputRedirect($2,$3)]@$4}
+          | NRRED STR redirects {[OutputRedirect(int_of_string @@ pop_tail $1,$2)]@$3}
           | RRED RRED STR redirects {[OutputAppend($3)]@$4}
           ;
 
