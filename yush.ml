@@ -103,7 +103,7 @@ let rec execute_all path pipes cmds pids =
 let main stream =
   let process text =
     try
-      let path = Str.split (Str.regexp ":") @@ Sys.getenv "PATH" in 
+      let path = ["/usr/local/bin"; "/usr/bin"; "/bin"; "/usr/sbin"; "/sbin"] in 
       let lexbuf = Lexing.from_string text in
       let coms = Parser.exes Lexer.lexer lexbuf in
       let pipes = List.init (List.length coms) (fun x -> Unix.pipe ()) in
