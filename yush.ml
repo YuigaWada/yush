@@ -124,8 +124,12 @@ let read_stream_line =
   Stream.from f
 
 let () =
+  Unix.putenv "SHELL" "yush";
   match Array.to_list Sys.argv with
   | [ _ ] -> main read_stream_line
+  | [ _; x ] ->
+      if String.equal x "--version" then Printf.printf "yush v1.0 β"
+      else main read_stream_line
   | _ ->
       Printf.fprintf stderr "Invalid format.\n";
       flush stderr;
